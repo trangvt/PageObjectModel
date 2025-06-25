@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Appenders>
+        <File name="LogToFile" fileName="logs/log4j2.log">
+            <PatternLayout pattern="[%-5level] %d{dd-MM-yyyy HH:mm:ss} [%t] %c{1} - %msg%n"/>
+        </File>
+    </Appenders>
+    <Loggers>
+        <Logger name="Log4j2" level="INFO" additivity="false">
+            <AppenderRef ref="LogToFile"/>
+        </Logger>
+        <Root level="INFO">
+            <AppenderRef ref="LogToFile"/>
+        </Root>
+    </Loggers>
+</Configuration>
