@@ -18,13 +18,11 @@ public class BaseTest {
 
         // 2. Lấy baseUrl từ ConfigReader (ConfigReader đã tự động tải file properties đã chỉ định)
         this.baseUrl = ConfigReader.getProperty("base_url");
-        LoggerUtil.info("BaseTest - BeforeTest: set browser");
-        LoggerUtil.info("BaseTest setup - baseUrl: " + this.baseUrl);
+        LoggerUtil.info("BaseTest - setup - baseUrl: " + this.baseUrl);
     }
-
 
     @AfterTest
     public void tearDown() {
-//        DriverFactory.quitDriver();
+        DriverFactory.quitDriver();
     }
 }

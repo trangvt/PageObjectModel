@@ -10,40 +10,42 @@ import utils.LoggerUtil;
 
 import java.time.Duration;
 
-public class RegisterPage {
-    private WebDriver driver;
-    private WebDriverWait wait;
+public class RegisterPage{
+    private final WebDriver driver;
+    private final WebDriverWait wait;
 
-    // Elements
-    private By firstNameTextBox = By.id("firstname");
-    private By lastNameTextBox = By.id("lastname");
-    private By emailTextBox = By.id("email_address"); // ID cho email ở trang đăng ký có thể khác
-    private By passwordTextBox = By.id("password");
-    private By confirmPasswordTextBox = By.id("password-confirmation");
-    private By createAccountButton = By.cssSelector("button[title='Create an Account']");
-    private By successMessage = By.cssSelector(".message-success.success div");
-    private By errorMessage = By.cssSelector(".message-error.error div");
-    private By validationMessage = By.cssSelector(".mage-error"); // Common class for field validation errors
+    private final By firstNameTextBox = By.id("firstname");
+    private final By lastNameTextBox = By.id("lastname");
+    private final By isSubscribedCheckBox = By.id("is_subscribed");
+    private final By emailTextBox = By.id("email_address");
+    private final By passwordTextBox = By.id("password");
+    private final By confirmPasswordTextBox = By.id("password-confirmation");
+    private final By createAccountButton = By.id("send2");
+
+    private final By firstNameErrorEmpty = By.id("firstname-error");
+    private final By lastNameErrorEmpty = By.id("lastname-error");
+    private final By emailError = By.id("email_address-error");
+    private final By passwordError = By.id("password-error");
+    private final By confirmPasswordError = By.id("password-confirmation-error");
 
     public RegisterPage(WebDriver driver) {
         this.driver = driver;
-        this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-    }
-
-    public void navigateToRegisterPage() {
-        driver.get("https://magento-demo.mageplaza.com/customer/account/create/");
+        /*
+        explicit wait, wait 5 seconds
+         */
+        this.wait = new WebDriverWait(driver, Duration.ofSeconds(5));
     }
 
     public void enterFirstName(String firstName) {
-        wait.until(ExpectedConditions.visibilityOfElementLocated(firstNameTextBox)).sendKeys(firstName);
+        driver.findElement(firstNameTextBox).sendKeys(firstName);
     }
 
     public void enterLastName(String lastName) {
-        wait.until(ExpectedConditions.visibilityOfElementLocated(lastNameTextBox)).sendKeys(lastName);
+        driver.findElement(lastNameTextBox).sendKeys(lastName);
     }
 
     public void enterEmail(String email) {
-        wait.until(ExpectedConditions.visibilityOfElementLocated(emailTextBox)).sendKeys(email);
+        driver.findElement(emailTextBox).sendKeys(email);
     }
 
     public void enterPassword(String password) {
@@ -58,25 +60,28 @@ public class RegisterPage {
         wait.until(ExpectedConditions.elementToBeClickable(createAccountButton)).click();
     }
 
-    public String getSuccessMessage() {
-        return wait.until(ExpectedConditions.visibilityOfElementLocated(successMessage)).getText();
+    public void submitEmptyForm() {
+        clickCreateAccountButton();
     }
 
-    public String getErrorMessage() {
-        return wait.until(ExpectedConditions.visibilityOfElementLocated(errorMessage)).getText();
+    public String getFirstNameErrorEmpty() {
+        WebElement error = wait.until(ExpectedConditions.visibilityOfElementLocated(firstNameErrorEmpty));
+        return error.getText();
     }
-
-    public String getValidationMessage(By fieldLocator) {
-        // Tìm thông báo lỗi ngay dưới trường input cụ thể
-        WebElement field = wait.until(ExpectedConditions.visibilityOfElementLocated(fieldLocator));
-        return field.findElement(By.xpath("./following-sibling::div[@class='mage-error']")).getText();
+    public String getLastNameErrorEmpty() {
+        WebElement error = wait.until(ExpectedConditions.visibilityOfElementLocated(lastNameErrorEmpty));
+        return error.getText();
     }
-
-    public boolean isErrorMessageDisplayed() {
-        try {
-            return wait.until(ExpectedConditions.visibilityOfElementLocated(errorMessage)).isDisplayed();
-        } catch (Exception e) {
-            return false;
-        }
+    public String getEmailError() {
+        WebElement error = wait.until(ExpectedConditions.visibilityOfElementLocated(emailError));
+        return error.getText();
+    }
+    public String getPasswordError() {
+        WebElement error = wait.until(ExpectedConditions.visibilityOfElementLocated(passwordError));
+        return error.getText();
+    }
+    public String getConfirmPasswordError() {
+        WebElement error = wait.until(ExpectedConditions.visibilityOfElementLocated(confirmPasswordError));
+        return error.getText();
     }
 }

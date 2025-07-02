@@ -1,93 +1,114 @@
 package tests;
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
+import base.BaseTest;
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 import pages.RegisterPage;
-import utils.DriverFactory;
+import utils.LoggerUtil;
 
-import java.util.UUID;
+public class RegisterTest extends BaseTest {
+    private static final String PAGE_PATH = "default/customer/account/create/";
+    private static final String errorRequiredField = "This is a required field.";
+    private static final String errorInvalidEmailFormat = "Please enter a valid email address (Ex: johndoe@domain.com).";
+    private static final String errorWeakPasswordFormat = "Minimum of different classes of characters in password is 3. Classes of characters: Lower Case, Upper Case, Digits, Special Characters.";
+    private static final String errorMismatchPassword = "Please enter the same value again.";
 
-public class RegisterTest {
-    private WebDriver driver;
     private RegisterPage registerPage;
 
     @BeforeMethod
-    @Parameters("browser") // Tên tham số phải khớp với tên trong testng.xml
-    public void setup(String browserName) {
-        driver = DriverFactory.getDriver(browserName); // Truyền tên trình duyệt vào getDriver()
+    public void setup() {
+        LoggerUtil.info("RegisterPage - setup");
+
+        driver.get(baseUrl + PAGE_PATH);
         registerPage = new RegisterPage(driver);
-        registerPage.navigateToRegisterPage();
     }
 
-    @Test(priority = 1, description = "Successful registration with valid details")
-    public void testRegisterSuccess() {
-        String randomEmail = "testuser_" + UUID.randomUUID().toString().substring(0, 8) + "@example.com";
-        registerPage.enterFirstName("Test");
-        registerPage.enterLastName("User");
-        registerPage.enterEmail(randomEmail);
-        registerPage.enterPassword("Password@123");
-        registerPage.enterConfirmPassword("Password@123");
+    /*
+    Scenario: Verify error message for empty required fields
+    Given I am on the registration page
+    When I leave all required fields empty
+    And I click the Create an Account button
+    Then I should see "This is a required field" error message for each required field
+      | Field            |
+      | First Name       |
+      | Last Name        |
+      | Email            |
+      | Password         |
+      | Confirm Password |
+     */
+    @Test(priority = 1, description = "Verify error message for empty required fields")
+    public void testAllEmptyFields() throws InterruptedException {
+        registerPage.submitEmptyForm();
+
+        Assert.assertEquals(registerPage.getFirstNameErrorEmpty(), errorRequiredField, "Wrong error message");
+        Assert.assertEquals(registerPage.getLastNameErrorEmpty(), errorRequiredField, "Wrong error message");
+        Assert.assertEquals(registerPage.getEmailError(), errorRequiredField, "Wrong error message");
+        Assert.assertEquals(registerPage.getPasswordError(), errorRequiredField, "Wrong error message");
+        Assert.assertEquals(registerPage.getConfirmPasswordError(), errorRequiredField, "Wrong error message");
+    }
+
+    /*
+    Scenario: Verify error message for invalid email format
+    Given I am on the registration page
+    When I enter invalid email format "invalidemail"
+    And I enter valid data in other required fields
+      | Field            | Value          |
+      | First Name       | John           |
+      | Last Name        | Doe            |
+      | Password         | Password123!   |
+      | Confirm Password | Password123!   |
+    And I click the Create an Account button
+    Then I should see an error message for invalid email format
+     */
+    @Test(priority = 2, description = "Verify error message for invalid email format")
+    public void testInvalidEmailFormat() {
+        registerPage.enterEmail("invalidemail");
         registerPage.clickCreateAccountButton();
-        Assert.assertTrue(registerPage.getSuccessMessage().contains("Thank you for registering with Main Website Store."), "Success message not displayed or incorrect.");
+
+        Assert.assertEquals(registerPage.getEmailError(), errorInvalidEmailFormat, "Wrong error message");
     }
 
-    @Test(priority = 2, description = "Registration with existing email")
-    public void testRegisterExistingEmail() {
-        // Sử dụng một email đã được đăng ký trước đó (hoặc đăng ký thành công ở test case khác)
-        registerPage.enterFirstName("Test");
-        registerPage.enterLastName("User");
-        registerPage.enterEmail("existinguser@example.com"); // Thay bằng email đã tồn tại
-        registerPage.enterPassword("Password@123");
-        registerPage.enterConfirmPassword("Password@123");
+    /*
+    Scenario: Verify error message for weak password
+    Given I am on the registration page
+    When I enter a weak password "weak"
+    And I enter valid data in other required fields
+      | Field            | Value          |
+      | First Name       | John           |
+      | Last Name        | Doe            |
+      | Email            | john.doe@example.com |
+      | Confirm Password | weak           |
+    And I click the Create an Account button
+    Then I should see "Minimum of different classes of characters in password is 3. Classes of characters: Lower Case, Upper Case, Digits, Special Characters."
+     */
+    @Test(priority = 3, description = "Verify error message for weak password")
+    public void testWeakPassword() {
+        registerPage.enterPassword("weak");
         registerPage.clickCreateAccountButton();
-        Assert.assertTrue(registerPage.isErrorMessageDisplayed(), "Error message should be displayed for existing email.");
-        Assert.assertTrue(registerPage.getErrorMessage().contains("There is already an account with this email address."), "Incorrect error message for existing email.");
+
+        Assert.assertEquals(registerPage.getPasswordError(), errorWeakPasswordFormat, "Wrong error message");
     }
 
-    @Test(priority = 3, description = "Registration with mismatching passwords")
-    public void testRegisterMismatchPassword() {
-        String randomEmail = "mismatch_" + UUID.randomUUID().toString().substring(0, 8) + "@example.com";
-        registerPage.enterFirstName("Test");
-        registerPage.enterLastName("User");
-        registerPage.enterEmail(randomEmail);
-        registerPage.enterPassword("Password@123");
-        registerPage.enterConfirmPassword("Password@Wrong"); // Mật khẩu không khớp
+    /*
+    Scenario: Verify error message for password mismatch
+    Given I am on the registration page
+    When I enter mismatched passwords
+      | Field            | Value          |
+      | First Name       | John           |
+      | Last Name        | Doe            |
+      | Email            | john.doe@example.com |
+      | Password         | Password123!   |
+      | Confirm Password | Password456!   |
+    And I click the Create an Account button
+    Then I should see an error message for password mismatch
+     */
+    @Test(priority = 4, description = "Verify error message for password mismatch")
+    public void testMismatchPassword() {
+        registerPage.enterPassword("Password123!");
+        registerPage.enterConfirmPassword("Password456!");
         registerPage.clickCreateAccountButton();
-        Assert.assertTrue(driver.findElement(By.id("password-confirmation-error")).isDisplayed(), "Password confirmation error message should be displayed.");
-        Assert.assertTrue(driver.findElement(By.id("password-confirmation-error")).getText().contains("Please enter the same value again."), "Incorrect error message for mismatching passwords.");
-    }
 
-    @Test(priority = 4, description = "Registration with weak password")
-    public void testRegisterWeakPassword() {
-        String randomEmail = "weakpass_" + UUID.randomUUID().toString().substring(0, 8) + "@example.com";
-        registerPage.enterFirstName("Test");
-        registerPage.enterLastName("User");
-        registerPage.enterEmail(randomEmail);
-        registerPage.enterPassword("123"); // Mật khẩu yếu
-        registerPage.enterConfirmPassword("123");
-        registerPage.clickCreateAccountButton();
-        Assert.assertTrue(driver.findElement(By.id("password-error")).isDisplayed(), "Password error message should be displayed for weak password.");
-        Assert.assertTrue(driver.findElement(By.id("password-error")).getText().contains("Minimum length of this field must be equal or greater than 8 symbols."), "Incorrect error message for weak password.");
-    }
-
-    @Test(priority = 5, description = "Registration with empty mandatory fields")
-    public void testRegisterEmptyFields() {
-        registerPage.clickCreateAccountButton(); // Click without entering anything
-        Assert.assertTrue(driver.findElement(By.id("firstname-error")).isDisplayed(), "First name error message should be displayed.");
-        Assert.assertTrue(driver.findElement(By.id("lastname-error")).isDisplayed(), "Last name error message should be displayed.");
-        Assert.assertTrue(driver.findElement(By.id("email_address-error")).isDisplayed(), "Email error message should be displayed.");
-        Assert.assertTrue(driver.findElement(By.id("password-error")).isDisplayed(), "Password error message should be displayed.");
-        Assert.assertTrue(driver.findElement(By.id("password-confirmation-error")).isDisplayed(), "Confirm password error message should be displayed.");
-    }
-
-
-    @AfterMethod
-    public void tearDown() {
-        DriverFactory.quitDriver();
+        Assert.assertEquals(registerPage.getPasswordError(), errorMismatchPassword, "Wrong error message");
     }
 }
