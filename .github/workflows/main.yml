@@ -1,4 +1,4 @@
-name: Run TestNG Tests
+name: Run TestNG Tests with Allure Report and Deploy to GitHub Pages
 
 on:
   push:
@@ -34,10 +34,24 @@ jobs:
         run: mvn clean test -DsuiteXmlFile=src/test/suites/register.xml -e -X
         # -e: Hiển thị lỗi chi tiết, -X: Hiển thị debug log
 
-      # (Tùy chọn) Bước 5: Tải lên kết quả test (nếu cần)
-      - name: Upload Test Results
-        if: always()  # Chạy bước này ngay cả khi test thất bại
+      - name: Generate Allure Report
+        if: always()
+        run: mvn allure:report
+
+      - name: Verify Allure Results
+        run: ls -la target/allure-results/ || echo "Allure results not found"
+
+      - name: Upload Allure Report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-results
-          path: target/surefire-reports/  # Thư mục chứa kết quả TestNG
+          name: allure-report
+          path: target/site/allure-maven-plugin/
+
+      - name: Deploy to GitHub Pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' # Chỉ deploy khi push lên main
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: target/site/allure-maven-plugin  # Thư mục chứa báo cáo Allure
+          publish_branch: gh-pages
