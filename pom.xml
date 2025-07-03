@@ -64,7 +64,14 @@
             <artifactId>allure-attachments</artifactId>
             <version>2.29.1</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/io.qameta.allure/allure-maven -->
+        <dependency>
+            <groupId>io.qameta.allure</groupId>
+            <artifactId>allure-maven</artifactId>
+            <version>2.15.2</version>
+        </dependency>
     </dependencies>
+    <!-- Surefire Plugin cho TestNG -->
     <build>
         <plugins>
             <plugin>
