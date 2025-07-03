@@ -21,16 +21,14 @@ jobs:
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '21'  # Đảm bảo phiên bản Java phù hợp với dự án
-          distribution: 'temurin'  # Sử dụng Eclipse Temurin distribution
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven  # Tự động cache dependencies Maven để tăng tốc build
 
-      # Bước 3: Cài đặt Maven
-      - name: Setup Maven
-        uses: stefanzweifel/setup-maven@v2
-        with:
-          maven-version: '3.9.6'  # Phiên bản Maven mới nhất (có thể thay đổi)
+      - name: Verify Maven Installation
+        run: mvn --version
 
-      # Bước 4: Chạy TestNG tests
+      # Chạy TestNG tests
       - name: Run TestNG Tests
         run: mvn clean test -DsuiteXmlFile=src/test/suites/register.xml
 
