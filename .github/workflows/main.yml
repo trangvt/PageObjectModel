@@ -1,36 +1,39 @@
-name: Build and Deploy Allure Report
+name: Build and Deploy Allure Report #Tên hiển thị của workflow trên GitHub Actions.
 
-on:
-  push:
+on: # Định nghĩa các sự kiện sẽ kích hoạt workflow này
+  push: # Khi có sự kiện push code
     branches:
       - main  # Chạy khi push code lên nhánh main
-  pull_request:
+  pull_request: # Khi có sự kiện pull request
     branches:
       - main  # Chạy khi tạo pull request vào nhánh main
-  workflow_dispatch:
+  workflow_dispatch: # Cho phép chạy workflow này thủ công từ giao diện GitHub Actions
 
-jobs:
-  build:
-    runs-on: ubuntu-latest  # Sử dụng runner Ubuntu
+jobs: # Định nghĩa các công việc (jobs) sẽ được thực hiện trong workflow
+  build: # Tên của job đầu tiên, chịu trách nhiệm build và tạo report
+    runs-on: ubuntu-latest  # Chỉ định môi trường ảo (runner) để chạy job này. 'ubuntu-latest' là phiên bản Ubuntu mới nhất.
 
-    steps:
+    steps: # Các bước (steps) tuần tự sẽ được thực hiện trong job 'build'
       # Bước 1: Checkout code từ repository
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Checkout code # Tên hiển thị của bước
+        uses: actions/checkout@v4 # Sử dụng một GitHub Action có sẵn để tải mã nguồn của repository về runner
+        # @v4 chỉ định phiên bản của action
 
       # Bước 2: Cài đặt Java (TestNG và Maven yêu cầu Java)
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
+        uses: actions/setup-java@v4 # Sử dụng một GitHub Action có sẵn để cài đặt Java Development Kit
+        with: # Các tham số cho action 'setup-java'
           java-version: '21'
-          distribution: 'temurin'
-          cache: maven  # Tự động cache dependencies Maven để tăng tốc build
+          distribution: 'temurin' # Nhà phân phối JDK (Temurin là một lựa chọn phổ biến)
+          cache: maven  # Tự động cache dependencies Maven để tăng tốc build cho các lần chạy sau
 
       - name: Verify Maven Installation
         run: mvn --version
 
       # Bước này sẽ chạy TestNG và tạo các file kết quả Allure trong target/allure-results
       # Class AllureEnvironmentWriter của bạn sẽ tạo environment.properties ở đây
+      # 'clean': Xóa các file đã biên dịch và kết quả build trước đó.
+      # 'test': Chạy các bài kiểm thử (TestNG tests) được định nghĩa trong pom.xml của bạn.
       - name: Build with Maven and Run Tests
         run: mvn clean test
 
@@ -40,12 +43,16 @@ jobs:
         # -e: Hiển thị lỗi chi tiết, -X: Hiển thị debug log
 
       # https://github.com/allure-framework/allure2/releases
+      # '-L': Theo dõi các redirect.
+      # '-o allure.zip': Lưu file tải về dưới tên 'allure.zip'.
       - name: Install Allure Commandline
         run: |
          ALLURE_VERSION=2.34.1
          curl -L https://github.com/allure-framework/allure2/releases/download/$ALLURE_VERSION/allure-$ALLURE_VERSION.zip -o allure.zip
          sudo unzip allure.zip -d /opt/
          echo "/opt/allure-$ALLURE_VERSION/bin" >> $GITHUB_PATH
+        # Thêm đường dẫn đến thư mục chứa lệnh 'allure' vào biến môi trường PATH của runner.
+        # Điều này cho phép các bước sau gọi lệnh 'allure' trực tiếp.
 
       - name: Verify Allure Results
         run: ls -la target/allure-results/ || echo "Allure results not found"
@@ -54,40 +61,45 @@ jobs:
       # Allure CLI sẽ tìm environment.properties trong target/allure-results
       - name: Generate Allure Report
         run: allure generate target/allure-results --output target/allure-report --clean
+          # Chạy lệnh 'allure' (đã có trong PATH):
+          # 'generate': Lệnh để tạo report HTML tĩnh.
+          # 'target/allure-results': Đường dẫn đến thư mục chứa các file kết quả Allure (.json, .xml, environment.properties).
+          # '--output target/allure-report': Chỉ định thư mục đầu ra nơi report HTML sẽ được tạo.
+          # '--clean': Xóa thư mục đầu ra trước khi tạo report mới.
 
       - name: Upload Allure report artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4 # Upload một artifact
         with:
-          name: allure-report
-          path: target/allure-report # Thư mục chứa report tĩnh đã được tạo
+          name: allure-report # Tên của artifact. Job 'deploy' sẽ tải artifact này xuống bằng tên này.
+          path: target/allure-report # Đường dẫn đến thư mục chứa các file report cần tải lên. Artifact này sẽ được job deploy tải xuống.
 
-  deploy:
+  deploy: # Tên của job thứ hai, chịu trách nhiệm triển khai report lên GitHub Pages
       runs-on: ubuntu-latest
-      needs: build
+      needs: build # Job này sẽ chỉ chạy sau khi job 'build' hoàn thành thành công
       # Cần quyền để deploy đến GitHub Pages
       permissions:
-        pages: write
-        id-token: write
+        pages: write # Cho phép job ghi vào GitHub Pages
+        id-token: write # Cho phép job yêu cầu một mã thông báo ID (cho OIDC authentication)
 
-      environment:
-        name: github-pages
-        url: ${{ steps.deployment.outputs.page_url }}
+      environment: # Định nghĩa môi trường deployment
+        name: github-pages # Tên của môi trường GitHub Pages
+        url: ${{ steps.deployment.outputs.page_url }} # Biến chứa URL của trang GitHub Pages sau khi deploy
 
       steps:
         - name: Download Allure report artifact
-          uses: actions/download-artifact@v4
+          uses: actions/download-artifact@v4 # Sử dụng GitHub Action để tải xuống (download) một artifact
           with:
-            name: allure-report
-            path: allure-report
+            name: allure-report # Tên của artifact cần tải xuống (phải khớp với tên đã upload ở job 'build')
+            path: allure-report # Đường dẫn nơi artifact sẽ được tải xuống trên runner của job 'deploy'
 
         - name: Setup Pages
-          uses: actions/configure-pages@v5
+          uses: actions/configure-pages@v5 # Cấu hình môi trường GitHub Pages.
 
         - name: Upload artifact for GitHub Pages
-          uses: actions/upload-pages-artifact@v3
+          uses: actions/upload-pages-artifact@v3 # Tải lên artifact cho GitHub Pages
           with:
             path: allure-report # Đảm bảo đường dẫn này đúng với thư mục report đã tải xuống
 
         - name: Deploy to GitHub Pages
-          id: deployment
-          uses: actions/deploy-pages@v4
+          id: deployment # Đặt một ID cho bước này để có thể tham chiếu đến các output của nó
+          uses: actions/deploy-pages@v4 # Triển khai nội dung đã tải lên lên GitHub Pages.
