@@ -1,20 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
-<suite name="Suite - Login Page - Cross-browser">
+<suite name="Suite - Register Page">
     <listeners>
         <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
+        <listener class-name="utils.AllureEnvironmentWriter"/>
     </listeners>
-    <test name="Test - Login Page - Chrome">
+    <test name="Test - Register Page - Chrome">
         <parameter name="browser" value="chrome"/>
         <classes>
             <class name="tests.RegisterTest"/>
         </classes>
     </test>
-
-<!--    <test name="Test - Login Page - Firefox">-->
-<!--        <parameter name="browser" value="firefox"/>-->
-<!--        <classes>-->
-<!--            <class name="tests.LoginTest"/>-->
-<!--        </classes>-->
-<!--    </test>-->
 </suite>

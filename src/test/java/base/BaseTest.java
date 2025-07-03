@@ -6,6 +6,10 @@ import utils.ConfigReader;
 import utils.DriverFactory;
 import utils.LoggerUtil;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Properties;
+
 public class BaseTest {
     protected WebDriver driver;
     protected String baseUrl;

@@ -10,7 +10,7 @@ import utils.LoggerUtil;
 
 import java.time.Duration;
 
-public class RegisterPage{
+public class RegisterPage {
     private final WebDriver driver;
     private final WebDriverWait wait;
 

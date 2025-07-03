@@ -1,0 +1,72 @@
+name: Build and Test with Allure Report
+
+on:
+  push:
+    branches:
+      - main # Chạy khi có push lên branch main
+  pull_request:
+    branches:
+      - main # Chạy khi có PR lên branch main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest # Hoặc windows-latest, macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21' # Hoặc phiên bản Java của bạn
+          distribution: 'temurin'
+          cache: 'maven' # Cache dependencies cho Maven
+
+      - name: Run Maven Tests and Generate Allure Results
+        run: |
+          mvn clean test # Chạy các test và tạo allure-results trong target/
+
+      - name: Get Allure History
+        uses: actions/checkout@v4 # Cần checkout lại để truy cập các build trước
+        if: always() # Luôn chạy bước này, ngay cả khi test fail
+        continue-on-error: true # Tiếp tục ngay cả khi không có lịch sử
+        with:
+          ref: gh-pages # Branch bạn dùng để lưu Allure Report
+          path: gh-pages # Thư mục checkout
+
+      - name: Generate Allure Report with History
+        uses: allure-framework/allure-github-action@v2.2.1 # Sử dụng Allure Action
+        id: allure_report
+        with:
+          report_dir: allure-report # Tên thư mục report HTML
+          results_pattern: target/allure-results # Nơi Allure results được tạo ra
+          history_dir: gh-pages/allure-history # Thư mục chứa lịch sử Allure (thường là trong branch gh-pages)
+
+      - name: Deploy Allure Report to GitHub Pages
+        if: always() # Luôn triển khai report, ngay cả khi test fail
+        uses: peaceiris/actions-gh-pages@v3 # Action để triển khai lên GitHub Pages
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }} # Token mặc định của GitHub
+          publish_dir: allure-report # Thư mục report HTML để deploy
+          destination_dir: allure-history # Đặt Allure Report vào thư mục này trên branch gh-pages
+          # Để Allure Action có thể tìm thấy history trong các lần chạy sau
+
+      - name: Publish Allure Report Link
+        run: |
+          echo "Allure Report URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/allure-history"
+        if: always()
+
+      - name: Archive Allure Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: allure-results-${{ github.sha }}
+          path: target/allure-results
+
+      - name: Archive Allure Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: allure-report-${{ github.sha }}
+          path: allure-report

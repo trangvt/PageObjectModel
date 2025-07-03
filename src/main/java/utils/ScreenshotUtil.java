@@ -20,7 +20,7 @@ public class ScreenshotUtil implements ITestListener {
             // Tìm field "driver" trong class hiện tại hoặc các class cha
             driver = getDriverFromTestClass(testClass);
             if (driver == null) {
-                System.out.println("Không tìm thấy WebDriver trong test class.");
+                System.out.println("Not found WebDriver in Test Class.");
                 return;
             }
             TakesScreenshot ts = (TakesScreenshot) driver;
@@ -28,11 +28,11 @@ public class ScreenshotUtil implements ITestListener {
             String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
             File destination = new File("screenshots/" + result.getName() + "_" + timestamp + ".png");
             // Tạo thư mục nếu chưa tồn tại
-            destination.getParentFile().mkdirs();
+            //destination.getParentFile().mkdirs();
             FileUtils.copyFile(source, destination);
-            System.out.println("Ảnh màn hình đã được lưu tại: " + destination.getAbsolutePath());
+            System.out.println("Saved screenshots: " + destination.getAbsolutePath());
         } catch (Exception e) {
-            System.out.println("Lỗi khi chụp ảnh màn hình: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+            System.out.println("Error] screenshots: " + e.getClass().getSimpleName() + " - " + e.getMessage());
         }
     }
 
