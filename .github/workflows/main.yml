@@ -39,9 +39,13 @@ jobs:
       #  run: mvn clean test -DsuiteXmlFile=src/test/suites/register.xml -e -X
         # -e: Hiển thị lỗi chi tiết, -X: Hiển thị debug log
 
-      # Tải và giải nén Allure CLI. Sử dụng phiên bản Allure CLI khớp với allure-testng của bạn
+      # https://github.com/allure-framework/allure2/releases
       - name: Install Allure Commandline
-        run: brew install allure
+        run: |
+         ALLURE_VERSION=2.34.1
+         curl -L https://github.com/allure-framework/allure2/releases/download/$ALLURE_VERSION/allure-$ALLURE_VERSION.zip -o allure.zip
+         sudo unzip allure.zip -d /opt/
+         echo "/opt/allure-$ALLURE_VERSION/bin" >> $GITHUB_PATH
 
       - name: Verify Allure Results
         run: ls -la target/allure-results/ || echo "Allure results not found"
