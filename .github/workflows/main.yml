@@ -31,7 +31,8 @@ jobs:
 
       # Chạy TestNG tests
       - name: Run TestNG Tests
-        run: mvn clean test
+        run: mvn clean test -DsuiteXmlFile=src/test/suites/register.xml -e -X
+        # -e: Hiển thị lỗi chi tiết, -X: Hiển thị debug log
 
       # (Tùy chọn) Bước 5: Tải lên kết quả test (nếu cần)
       - name: Upload Test Results
