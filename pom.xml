@@ -81,17 +81,6 @@
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
-            <!-- Allure Maven Plugin -->
-            <plugin>
-                <groupId>io.qameta.allure</groupId>
-                <artifactId>allure-maven</artifactId>
-                <version>2.15.2</version> <!-- Sử dụng phiên bản mới nhất, kiểm tra trên https://mvnrepository.com/artifact/io.qameta.allure/allure-maven -->
-                <configuration>
-                    <reportVersion>2.29.1</reportVersion> <!-- Khớp với phiên bản allure-testng -->
-                    <resultsDirectory>target/allure-results</resultsDirectory>
-                    <outputDirectory>target/allure-report</outputDirectory>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
 </project>
