@@ -1,4 +1,4 @@
-name: Run TestNG Tests with Allure Report and Deploy to GitHub Pages
+name: Build and Deploy Allure Report
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest  # Sử dụng runner Ubuntu
 
     steps:
@@ -29,29 +29,40 @@ jobs:
       - name: Verify Maven Installation
         run: mvn --version
 
+      # Bước này sẽ chạy TestNG, và AllureEnvironmentWriter listener sẽ tạo ra environment.properties
+      - name: Build with Maven and Run Tests
+        run: mvn clean test
+
       # Chạy TestNG tests
-      - name: Run TestNG Tests
-        run: mvn clean test -DsuiteXmlFile=src/test/suites/register.xml -e -X
+      #- name: Run TestNG Tests
+      #  run: mvn clean test -DsuiteXmlFile=src/test/suites/register.xml -e -X
         # -e: Hiển thị lỗi chi tiết, -X: Hiển thị debug log
 
+      # Lệnh này sẽ sử dụng các file kết quả (bao gồm environment.properties) để tạo report
       - name: Generate Allure Report
-        if: always()
         run: mvn allure:report
 
       - name: Verify Allure Results
         run: ls -la target/allure-results/ || echo "Allure results not found"
 
-      - name: Upload Allure Report
-        if: always()
+      - name: Upload Allure Report artifact
         uses: actions/upload-artifact@v4
         with:
           name: allure-report
-          path: target/site/allure-maven-plugin/
+          path: target/allure-report # Đường dẫn này phải khớp với <outputDirectory> trong pom.xml
 
-      - name: Deploy to GitHub Pages
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' # Chỉ deploy khi push lên main
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Upload report to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: target/site/allure-maven-plugin  # Thư mục chứa báo cáo Allure
-          publish_branch: gh-pages
+          publish_dir: ./reports
+          destination_dir: reports
+          keep_files: false # Xóa các file cũ trong nhánh gh-pages trước khi đẩy mới
+        if: always()
+
+      - name: Upload report as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: reports/report.html #https://trangvt.github.io/API-Test-Automation/reports/report.html
+          if: always()

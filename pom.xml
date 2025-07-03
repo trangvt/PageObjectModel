@@ -65,9 +65,9 @@
             <version>2.29.1</version>
         </dependency>
     </dependencies>
-    <!-- Surefire Plugin cho TestNG -->
     <build>
         <plugins>
+            <!-- Surefire Plugin cho TestNG -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -89,6 +89,7 @@
                 <configuration>
                     <reportVersion>2.29.1</reportVersion> <!-- Khớp với phiên bản allure-testng -->
                     <resultsDirectory>target/allure-results</resultsDirectory>
+                    <outputDirectory>target/allure-report</outputDirectory>
                 </configuration>
             </plugin>
         </plugins>
