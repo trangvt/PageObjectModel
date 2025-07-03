@@ -60,3 +60,34 @@ jobs:
         with:
           name: allure-report
           path: target/allure-report # Thư mục chứa report tĩnh đã được tạo
+
+    deploy:
+        runs-on: ubuntu-latest
+        needs: build
+        # Cần quyền để deploy đến GitHub Pages
+        permissions:
+          pages: write
+          id-token: write
+
+        environment:
+          name: github-pages
+          url: ${{ steps.deployment.outputs.page_url }}
+
+        steps:
+          - name: Download Allure report artifact
+            uses: actions/download-artifact@v4
+            with:
+              name: allure-report
+              path: allure-report
+
+          - name: Setup Pages
+            uses: actions/configure-pages@v5
+
+          - name: Upload artifact for GitHub Pages
+            uses: actions/upload-pages-artifact@v3
+            with:
+              path: allure-report # Đảm bảo đường dẫn này đúng với thư mục report đã tải xuống
+
+          - name: Deploy to GitHub Pages
+            id: deployment
+            uses: actions/deploy-pages@v4
